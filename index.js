@@ -44,10 +44,11 @@ mongoose
     useFindAndModify: false
   })
   .then(() => {
-    console.log('connected to MongoDB')
+    console.log('Connected to MongoDB successfully!')
   })
   .catch((error) => {
-    console.log('error connection to MongoDB:', error.message)
+    console.log('Error connecting to MongoDB:', error.message)
+    console.log('Possible cause: IP address is not whitelisted in MongoDB Atlas.')
   })
 
 const publicDirectoryPath = path.join(__dirname, './view')
@@ -58,6 +59,13 @@ app.use('/course-file', express.static('course-file'))
 app.use(cors())
 
 app.use(express.json())
+
+// Middleware для логирования всех запросов
+app.use((req, res, next) => {
+  console.log(`Request Method: ${req.method}, Request URL: ${req.url}`)
+  next()
+})
+
 app.use('/users', user)
 app.use('/discussions', discussionsRouter)
 app.use('/announcements', AnnouncementsRouter)
@@ -76,7 +84,17 @@ app.use('/courses/:courseId/modules/:moduleId/module-item', courseModuleItem)
 app.use('/courses/:courseId/lectures', lectureRouter)
 app.use('/achievements', achievementsRouter)
 
+// Логирование ошибок с загрузкой файлов
+app.use((err, req, res, next) => {
+  if (err) {
+    console.error('File upload error:', err)
+    res.status(500).send('File upload failed')
+  } else {
+    next()
+  }
+})
+
 const port = process.env.PORT || 4000
 app.listen(port, () => {
-  console.log('app is on Port ' + port)
+  console.log('App is running on Port ' + port)
 })
