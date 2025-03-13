@@ -47,7 +47,7 @@ mongoose
     console.log('Connected to MongoDB successfully!')
   })
   .catch((error) => {
-    console.log('Error connecting to MongoDB:', error.message)
+    console.error('Error connecting to MongoDB:', error.message)
     console.log('Possible cause: IP address is not whitelisted in MongoDB Atlas.')
   })
 
@@ -62,7 +62,17 @@ app.use(express.json())
 
 // Middleware для логирования всех запросов
 app.use((req, res, next) => {
-  console.log(`Request Method: ${req.method}, Request URL: ${req.url}`)
+  console.log(`Request Method: ${req.method}, Request URL: ${req.url}, Request Body:`, req.body)
+  next()
+})
+
+// Логирование запроса на загрузку файла
+app.use((req, res, next) => {
+  if (req.files) {
+    console.log('File upload detected, file details:', req.files)
+  } else {
+    console.log('No file in request')
+  }
   next()
 })
 
@@ -89,6 +99,16 @@ app.use((err, req, res, next) => {
   if (err) {
     console.error('File upload error:', err)
     res.status(500).send('File upload failed')
+  } else {
+    next()
+  }
+})
+
+// Логирование ошибок MongoDB
+app.use((err, req, res, next) => {
+  if (err) {
+    console.error('MongoDB error:', err)
+    res.status(500).send('Database error')
   } else {
     next()
   }
